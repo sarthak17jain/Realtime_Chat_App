@@ -41,6 +41,7 @@ if (process.env.NODE_ENV === 'production') {
     console.log(__dirname);
     console.log(path.join(__dirname, 'public', 'build', 'index.html'));
     app.get('*', (req, res) => {
+        console.log(req.url);
         res.sendFile(path.join(__dirname, 'public', 'build', 'index.html')); // relative path
     });
 }
