@@ -1,0 +1,48 @@
+.chat-bubble {
+    background-color:#E6F8F1;
+    padding:10px 20px; /* Reduced padding */
+    border-radius: 15px; /* Reduced border radius */
+    border-bottom-left-radius: 2px;
+    display:inline-block;
+}
+.typing {
+    align-items: center;
+    display: flex;
+    height: 12px; /* Reduced height */
+}
+.typing .dot {
+    animation: mercuryTypingAnimation 1.8s infinite ease-in-out;
+    background-color: #6CAD96 ; 
+    border-radius: 50%;
+    height: 5px; /* Reduced height */
+    margin-right: 3px; /* Reduced margin */
+    width: 5px; /* Reduced width */
+    display: inline-block;
+}
+.typing .dot:nth-child(1) {
+    animation-delay: 200ms;
+}
+.typing .dot:nth-child(2) {
+    animation-delay: 300ms;
+}
+.typing .dot:nth-child(3) {
+    animation-delay: 400ms;
+}
+.typing .dot:last-child {
+    margin-right: 0;
+}
+
+@keyframes mercuryTypingAnimation {
+    0% {
+      transform: translateY(0px);
+      background-color:#6CAD96; 
+    }
+    28% {
+      transform: translateY(-5px); /* Reduced translation */
+      background-color:#9ECAB9;
+    }
+    44% {
+      transform: translateY(0px);
+      background-color: #B5D9CB;
+    }
+}
