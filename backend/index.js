@@ -24,6 +24,16 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
+console.log(process.env.NODE_ENV);
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static( 'public/build' ));
+    console.log(__dirname);
+    console.log(path.join(__dirname, 'public', 'build', 'index.html'));
+    app.get('*', (req, res) => {
+        console.log(req.url);
+        res.sendFile(path.join(__dirname, 'public', 'build', 'index.html')); // relative path
+    });
+}
 // Error Handling middlewares
 app.use(notFound);
 app.use(errorHandler);
@@ -35,16 +45,6 @@ const server = app.listen(
   console.log(`Server running on PORT ${PORT}...`.yellow.bold)
 );
 
-console.log(process.env.NODE_ENV);
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static( 'public/build' ));
-    console.log(__dirname);
-    console.log(path.join(__dirname, 'public', 'build', 'index.html'));
-    app.get('*', (req, res) => {
-        console.log(req.url);
-        res.sendFile(path.join(__dirname, 'public', 'build', 'index.html')); // relative path
-    });
-}
 
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
