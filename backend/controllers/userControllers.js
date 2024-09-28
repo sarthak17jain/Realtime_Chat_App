@@ -4,7 +4,7 @@ const generateToken = require("../config/generateToken");
 
 //@description     Get or Search all users
 //@route           GET /api/user?search=
-//@access          Public
+//@access          Protected
 const allUsers = asyncHandler(async (req, res) => {
     const keyword = req.query.search
         ? {
@@ -15,7 +15,7 @@ const allUsers = asyncHandler(async (req, res) => {
           }
         : {};
 
-    const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
+    const users = await User.find(keyword).find({ _id: { $ne: req.user._id } }).select("-password");
     res.send(users);
 });
 
@@ -54,7 +54,6 @@ const registerUser = asyncHandler(async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
-            isAdmin: user.isAdmin,
             pic: user.pic,
             token: generateToken(user._id),
         });
@@ -77,7 +76,6 @@ const authUser = asyncHandler(async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
-            isAdmin: user.isAdmin,
             pic: user.pic,
             token: generateToken(user._id),
         });

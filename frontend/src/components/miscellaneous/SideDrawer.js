@@ -21,7 +21,7 @@ import ChatLoading from "../ChatLoading";
 import ProfileModal from "./ProfileModal";
 // import NotificationBadge from "react-notification-badge";
 // import { Effect } from "react-notification-badge";
-import { getSender } from "../../config/ChatLogics";
+import { getSender } from "../../config/ChatLogic";
 import UserListItem from "../userAvatar/UserListItem";
 import { ChatState } from "../../Context/ChatProvider";
 
@@ -46,6 +46,8 @@ function SideDrawer() {
 
     const logoutHandler = () => {
         localStorage.removeItem("userInfo");
+        setChats(undefined);
+        setNotification([]);
         navigate("/");
     };
 
@@ -58,6 +60,7 @@ function SideDrawer() {
                 isClosable: true,
                 position: "top-left",
             });
+            setSearchResult([]);
             return;
         }
 

@@ -23,7 +23,7 @@ const GroupChatModal = ({ children }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [groupChatName, setGroupChatName] = useState();
     const [selectedUsers, setSelectedUsers] = useState([]);
-    const [search, setSearch] = useState("");
+    // const [search, setSearch] = useState("");
     const [searchResult, setSearchResult] = useState([]);
     const [loading, setLoading] = useState(false);
     const toast = useToast();
@@ -31,6 +31,7 @@ const GroupChatModal = ({ children }) => {
     const { user, chats, setChats } = ChatState();
 
     const handleGroup = (userToAdd) => {
+        setSearchResult([]);
         if (selectedUsers.includes(userToAdd)) {
             toast({
                 title: "User already added",
@@ -46,10 +47,13 @@ const GroupChatModal = ({ children }) => {
     };
 
     const handleSearch = async (query) => {
-        setSearch(query);
+        // setSearch(query);
         if (!query) {
+            console.log("empty search")
+            setSearchResult([]);
             return;
         }
+        console.log(query);
 
         try {
             setLoading(true);
@@ -58,8 +62,8 @@ const GroupChatModal = ({ children }) => {
                 Authorization: `Bearer ${user.token}`,
                 },
             };
-            const { data } = await axios.get(`${process.env.REACT_APP_SERVER_BASE_URL}/api/user?search=${search}`, config);
-            console.log(data);
+            const { data } = await axios.get(`${process.env.REACT_APP_SERVER_BASE_URL}/api/user?search=${query}`, config);
+            // console.log(data);
             setLoading(false);
             setSearchResult(data);
         } catch (error) {
@@ -71,6 +75,7 @@ const GroupChatModal = ({ children }) => {
                 isClosable: true,
                 position: "bottom-left",
             });
+            setLoading(false);
         }
     };
 
@@ -125,11 +130,18 @@ const GroupChatModal = ({ children }) => {
         }
     };
 
+    const handleClose = () => {
+        setSearchResult([]);
+        setSelectedUsers([]);
+        setGroupChatName("");
+        onClose();
+    };
+
     return (
     <>
         <span onClick={onOpen}>{children}</span>
 
-        <Modal onClose={onClose} isOpen={isOpen} isCentered>
+        <Modal onClose={handleClose} isOpen={isOpen} isCentered>
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader

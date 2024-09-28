@@ -13,7 +13,7 @@ const accessChat = asyncHandler(async (req, res) => {
         return res.sendStatus(400);
     }
 
-    var isChat = await Chat.find({
+    let isChat = await Chat.find({
         isGroupChat: false,
         $and: [
             { users: { $elemMatch: { $eq: req.user._id } } },
@@ -31,7 +31,7 @@ const accessChat = asyncHandler(async (req, res) => {
     if (isChat.length > 0) {
         res.send(isChat[0]);
     } else {
-        var chatData = {
+        const chatData = {
             chatName: "sender",
             isGroupChat: false,
             users: [req.user._id, userId],
@@ -81,7 +81,7 @@ const createGroupChat = asyncHandler(async (req, res) => {
         return res.status(400).send({ message: "Please Fill all the feilds" });
     }
 
-    var users = JSON.parse(req.body.users);
+    const users = JSON.parse(req.body.users);
 
     if (users.length < 2) {
         return res
@@ -142,26 +142,39 @@ const renameGroup = asyncHandler(async (req, res) => {
 const removeFromGroup = asyncHandler(async (req, res) => {
     const { chatId, userId } = req.body;
 
-    // check if the requester is admin
+    const chat = await Chat.findById(chatId).populate("users", "-password");
 
-    const removed = await Chat.findByIdAndUpdate(
-        chatId,
-        {
-            $pull: { users: userId },
-        },
-        {
-            new: true,
-        }
-    )
-        .populate("users", "-password")
-        .populate("groupAdmin", "-password");
-
-    if (!removed) {
+    if (!chat) {
         res.status(404);
         throw new Error("Chat Not Found");
-    } else {
-        res.json(removed);
     }
+
+    // Check if the user being removed is the group admin
+    const isAdminBeingRemoved = chat.groupAdmin.toString() === userId;
+
+    // Remove the user from the chat's users array
+    chat.users = chat.users.filter(user => user._id.toString() !== userId);
+
+    if(chat.users.length === 0){
+        // Remove this particular chat if no users are left
+        await Chat.findByIdAndDelete(chatId);
+        
+        //also delete all messages for this particular chat
+
+        res.json({ message: "Chat has been deleted as no users are left." });
+        return;
+    }
+
+    // If the admin was removed, assign a new admin
+    if (isAdminBeingRemoved) {
+        const newAdmin = chat.users[0]; // Select the first user as the new admin
+        chat.groupAdmin = newAdmin._id;
+    }
+
+    await chat.save();
+    await chat.populate("groupAdmin", "-password"); // Re-populate the groupAdmin field
+
+    res.json(chat);
 });
 
 // @desc    Add user to Group / Leave
@@ -169,8 +182,6 @@ const removeFromGroup = asyncHandler(async (req, res) => {
 // @access  Protected
 const addToGroup = asyncHandler(async (req, res) => {
     const { chatId, userId } = req.body;
-
-    // check if the requester is admin
 
     const added = await Chat.findByIdAndUpdate(
         chatId,

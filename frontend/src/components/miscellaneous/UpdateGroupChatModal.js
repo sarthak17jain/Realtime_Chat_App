@@ -25,7 +25,7 @@ import UserListItem from "../userAvatar/UserListItem";
 const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [groupChatName, setGroupChatName] = useState();
-    const [search, setSearch] = useState("");
+    // const [search, setSearch] = useState("");
     const [searchResult, setSearchResult] = useState([]);
     const [loading, setLoading] = useState(false);
     const [renameloading, setRenameLoading] = useState(false);
@@ -34,8 +34,9 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
     const { selectedChat, setSelectedChat, user } = ChatState();
 
     const handleSearch = async (query) => {
-        setSearch(query);
+        // setSearch(query);
         if (!query) {
+            setSearchResult([]);
             return;
         }
 
@@ -46,7 +47,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 Authorization: `Bearer ${user.token}`,
                 },
             };
-            const { data } = await axios.get(`${process.env.REACT_APP_SERVER_BASE_URL}/api/user?search=${search}`, config);
+            const { data } = await axios.get(`${process.env.REACT_APP_SERVER_BASE_URL}/api/user?search=${query}`, config);
             console.log(data);
             setLoading(false);
             setSearchResult(data);
@@ -83,7 +84,6 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
             );
 
             console.log(data._id);
-            // setSelectedChat("");
             setSelectedChat(data);
             setFetchAgain(!fetchAgain);
             setRenameLoading(false);
@@ -102,6 +102,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
     };
 
     const handleAddUser = async (user1) => {
+        setSearchResult([]);
         if (selectedChat.users.find((u) => u._id === user1._id)) {
             toast({
                 title: "User Already in group!",
@@ -185,6 +186,9 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 config
             );
 
+            //no need to check if all people were removed since if all people were removed then the person itself would have been removed
+            //due to which user1._id === user._id and setSelectedChat() is executed
+
             user1._id === user._id ? setSelectedChat() : setSelectedChat(data);
             setFetchAgain(!fetchAgain);
             fetchMessages();
@@ -203,11 +207,17 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
         setGroupChatName("");
     };
 
+    const handleClose = () => {
+        setSearchResult([]);
+        setGroupChatName("");
+        onClose();
+    };
+
     return (
     <>
         <IconButton display={{ base: "flex" }} icon={<ViewIcon />} onClick={onOpen} />
 
-        <Modal onClose={onClose} isOpen={isOpen} isCentered>
+        <Modal onClose={handleClose} isOpen={isOpen} isCentered>
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader
@@ -226,7 +236,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                             <UserBadgeItem
                                 key={u._id}
                                 user={u}
-                                admin={selectedChat.groupAdmin}
+                                adminId={selectedChat.groupAdmin._id}
                                 handleFunction={() => handleRemove(u)}
                             />
                         ))}
