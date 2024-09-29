@@ -22,7 +22,7 @@ import { ChatState } from "../../Context/ChatProvider";
 import UserBadgeItem from "../userAvatar/UserBadgeItem";
 import UserListItem from "../userAvatar/UserListItem";
 
-const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
+const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [groupChatName, setGroupChatName] = useState();
     // const [search, setSearch] = useState("");
@@ -48,7 +48,6 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 },
             };
             const { data } = await axios.get(`${process.env.REACT_APP_SERVER_BASE_URL}/api/user?search=${query}`, config);
-            console.log(data);
             setLoading(false);
             setSearchResult(data);
         } catch (error) {
@@ -83,9 +82,8 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 config
             );
 
-            console.log(data._id);
-            setSelectedChat(data);
-            setFetchAgain(!fetchAgain);
+            socket.emit("groupModified", data.users);
+            setFetchAgain(!fetchAgain);//selectedChat is updated by fetchAgain
             setRenameLoading(false);
         } catch (error) {
             toast({
@@ -141,8 +139,8 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 config
             );
 
-            setSelectedChat(data);
-            setFetchAgain(!fetchAgain);
+            socket.emit("groupModified", data.users);
+            setFetchAgain(!fetchAgain);//selectedChat is updated by fetchAgain
             setLoading(false);
         } catch (error) {
             toast({
@@ -186,11 +184,8 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 config
             );
 
-            //no need to check if all people were removed since if all people were removed then the person itself would have been removed
-            //due to which user1._id === user._id and setSelectedChat() is executed
-
-            user1._id === user._id ? setSelectedChat() : setSelectedChat(data);
-            setFetchAgain(!fetchAgain);
+            socket.emit("groupModified", [user1, ...data.users]);
+            setFetchAgain(!fetchAgain);//selectedChat is updated by fetchAgain
             fetchMessages();
             setLoading(false);
         } catch (error) {

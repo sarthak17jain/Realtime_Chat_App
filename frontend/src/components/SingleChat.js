@@ -22,7 +22,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     const [socketConnected, setSocketConnected] = useState(false);
     const toast = useToast();
 
-    const { selectedChat, setSelectedChat, user, notification, setNotification, chats, setChats } = ChatState();
+    const { selectedChat, setSelectedChat, user, notification, setNotification, setChats } = ChatState();
 
     const fetchMessages = async () => {
         if (!selectedChat) return;
@@ -98,7 +98,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }, [notification]);
 
     useEffect(() => {
-        if(!selectedChatRef.current || selectedChatRef.current._id != selectedChat._id){//implemented because selectedChat changes on every new message in current chat
+        if(!selectedChatRef.current || (selectedChat && selectedChatRef.current._id != selectedChat._id)){//implemented because selectedChat changes on every new message in current chat
             fetchMessages();
         }
         selectedChatRef.current = selectedChat;
@@ -108,7 +108,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     //is inefficient in the case of socket since it registers multiple function handlers for the same event
     //everytime useEffect runs
     //therefore i am using useRef to combat stale closure
-    //NOTE since messages is used only in setState hook therefore i access the latest value 
+    //NOTE since messages and fetchAgain are used only in setState hook therefore i access the latest value 
     //using setState callback so that i have to make less refs
     useEffect(() => {
         socket = io(`${process.env.REACT_APP_SERVER_BASE_URL}`);
@@ -134,6 +134,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             } else {
                 setMessages((prevMessages) => [...prevMessages, newMessageRecieved]);
             }
+        });
+        socket.on("refreshGrps", ()=>{
+            setFetchAgain((prevFetchAgain)=>!prevFetchAgain);
         });
     }, []);
 
@@ -175,6 +178,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                         fetchMessages={fetchMessages}
                         fetchAgain={fetchAgain}
                         setFetchAgain={setFetchAgain}
+                        socket={socket}
                     />
                     </>
                 ))}

@@ -71,6 +71,12 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("groupModified", (modifiedGrpUsers) => {
+    modifiedGrpUsers.forEach((user) => {
+      socket.broadcast.in(user._id).emit("refreshGrps");
+    });
+  });
+
   socket.off("setup", () => {
     console.log("USER DISCONNECTED");
     socket.leave(userData._id);

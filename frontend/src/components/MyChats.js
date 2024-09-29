@@ -24,8 +24,12 @@ const MyChats = ({ fetchAgain }) => {
             };
 
             const { data } = await axios.get(`${process.env.REACT_APP_SERVER_BASE_URL}/api/chat`, config);
+            if(selectedChat){
+                setSelectedChat(data.find((chat)=>chat._id==selectedChat._id));
+            }            
             setChats(data);
         } catch (error) {
+            console.log(error);
             toast({
                 title: "Error Occured!",
                 description: "Failed to Load the chats",
