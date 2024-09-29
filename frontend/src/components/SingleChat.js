@@ -1,7 +1,7 @@
 import { FormControl, Input, Box, Text, IconButton, Spinner, useToast } from "@chakra-ui/react";
 import "./styles.css";
 import { getSender, getSenderFull } from "../config/ChatLogic";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./miscellaneous/ProfileModal";
@@ -13,7 +13,7 @@ import animationData from "../animations/typing.json";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
-var socket, selectedChatCompare;
+let socket;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     const [messages, setMessages] = useState([]);
@@ -22,7 +22,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     const [socketConnected, setSocketConnected] = useState(false);
     const toast = useToast();
 
-    const { selectedChat, setSelectedChat, user, notification, setNotification } = ChatState();
+    const { selectedChat, setSelectedChat, user, notification, setNotification, chats, setChats } = ChatState();
 
     const fetchMessages = async () => {
         if (!selectedChat) return;
@@ -71,6 +71,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     },
                     config
                 );
+
+                setChats((prevChats) => [data.chat, ...prevChats.filter(chat => chat._id != data.chat._id)]);
+                setSelectedChat(data.chat);
+
                 setNewMessage("");
                 socket.emit("new message", data);
                 setMessages([...messages, data]);
@@ -87,36 +91,51 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         }
     };
 
+    const notificationRef = useRef(notification);
+    const selectedChatRef = useRef(selectedChat);
+    useEffect(() => {
+        notificationRef.current = notification;
+    }, [notification]);
+
+    useEffect(() => {
+        if(!selectedChatRef.current || selectedChatRef.current._id != selectedChat._id){//implemented because selectedChat changes on every new message in current chat
+            fetchMessages();
+        }
+        selectedChatRef.current = selectedChat;
+    }, [selectedChat]);
+
+    //Using a new useEffect for "message received" event to avoid stale closure
+    //is inefficient in the case of socket since it registers multiple function handlers for the same event
+    //everytime useEffect runs
+    //therefore i am using useRef to combat stale closure
+    //NOTE since messages is used only in setState hook therefore i access the latest value 
+    //using setState callback so that i have to make less refs
     useEffect(() => {
         socket = io(`${process.env.REACT_APP_SERVER_BASE_URL}`);
         socket.emit("setup", user);
-        socket.on("connected", () => setSocketConnected(true));
-
-        // eslint-disable-next-line
-    }, []);
-
-    useEffect(() => {
-        fetchMessages();
-
-        selectedChatCompare = selectedChat;
-        // eslint-disable-next-line
-    }, [selectedChat]);
-
-    useEffect(() => {
+        socket.on("connected", () => {
+            setSocketConnected(true)
+            console.log(socket.id);
+        });
         socket.on("message recieved", (newMessageRecieved) => {
-            if (
-                !selectedChatCompare || // if chat is not selected or doesn't match current chat
-                selectedChatCompare._id !== newMessageRecieved.chat._id
-            ) {
-                if (!notification.includes(newMessageRecieved)) {
-                    setNotification([newMessageRecieved, ...notification]);
-                    setFetchAgain(!fetchAgain);
+            setChats((prevChats) => [newMessageRecieved.chat, ...prevChats.filter(chat => chat._id != newMessageRecieved.chat._id)]);
+            
+            if(selectedChatRef.current && newMessageRecieved.chat._id == selectedChatRef.current._id){
+                setSelectedChat(newMessageRecieved.chat);
+            }
+
+            if ((
+                !selectedChatRef.current || // if chat is not selected or doesn't match current chat
+                selectedChatRef.current._id !== newMessageRecieved.chat._id
+            ) && newMessageRecieved.sender._id != user._id) {
+                if (!notificationRef.current.includes(newMessageRecieved)) {
+                    setNotification([newMessageRecieved, ...notificationRef.current]);
                 }
             } else {
-                setMessages([...messages, newMessageRecieved]);
+                setMessages((prevMessages) => [...prevMessages, newMessageRecieved]);
             }
         });
-    });
+    }, []);
 
     const typingHandler = (e) => {
         setNewMessage(e.target.value);
