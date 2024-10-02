@@ -117,22 +117,22 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             setSocketConnected(true)
             console.log(socket.id);
         });
-        socket.on("message recieved", (newMessageRecieved) => {
-            setChats((prevChats) => [newMessageRecieved.chat, ...prevChats.filter(chat => chat._id != newMessageRecieved.chat._id)]);
+        socket.on("messageReceived", (newMessageReceived) => {
+            setChats((prevChats) => [newMessageReceived.chat, ...prevChats.filter(chat => chat._id != newMessageReceived.chat._id)]);
             
-            if(selectedChatRef.current && newMessageRecieved.chat._id == selectedChatRef.current._id){
-                setSelectedChat(newMessageRecieved.chat);
+            if(selectedChatRef.current && newMessageReceived.chat._id == selectedChatRef.current._id){
+                setSelectedChat(newMessageReceived.chat);
             }
 
             if ((
                 !selectedChatRef.current || // if chat is not selected or doesn't match current chat
-                selectedChatRef.current._id !== newMessageRecieved.chat._id
-            ) && newMessageRecieved.sender._id != user._id) {
-                if (!notificationRef.current.includes(newMessageRecieved)) {
-                    setNotification([newMessageRecieved, ...notificationRef.current]);
+                selectedChatRef.current._id !== newMessageReceived.chat._id
+            ) && newMessageReceived.sender._id != user._id) {
+                if (!notificationRef.current.includes(newMessageReceived)) {
+                    setNotification([newMessageReceived, ...notificationRef.current]);
                 }
             } else {
-                setMessages((prevMessages) => [...prevMessages, newMessageRecieved]);
+                setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
             }
         });
         socket.on("refreshGrps", ()=>{

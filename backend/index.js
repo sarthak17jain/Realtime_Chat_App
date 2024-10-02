@@ -61,13 +61,13 @@ io.on("connection", (socket) => {
     socket.emit("connected");
   });
 
-  socket.on("new message", (newMessageRecieved) => {
-    const chat = newMessageRecieved.chat;
+  socket.on("new message", (newMessageReceived) => {
+    const chat = newMessageReceived.chat;
 
     if (!chat.users) return console.log("chat.users not defined");
 
     chat.users.forEach((user) => {
-      socket.broadcast.in(user._id).emit("message recieved", newMessageRecieved);
+      socket.broadcast.in(user._id).emit("messageReceived", newMessageReceived);
     });
   });
 
