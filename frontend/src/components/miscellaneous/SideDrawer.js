@@ -102,7 +102,7 @@ function SideDrawer() {
             };
             const { data } = await axios.post(`${process.env.REACT_APP_SERVER_BASE_URL}/api/chat`, { userId }, config);
 
-            if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
+            if (!chats.find((c) => c.id === data.id)) setChats([data, ...chats]);
             setSelectedChat(data);
             setLoadingChat(false);
             onClose();
@@ -179,7 +179,7 @@ function SideDrawer() {
                         {!notification.length && "No New Messages"}
                         {notification.map((notif) => (
                             <MenuItem
-                                key={notif._id}
+                                key={notif.id}
                                 onClick={() => {
                                 setSelectedChat(notif.chat);
                                 setNotification(notification.filter((n) => n !== notif));
@@ -232,9 +232,9 @@ function SideDrawer() {
                     ) : (
                         searchResult?.map((user) => (
                             <UserListItem
-                                key={user._id}
+                                key={user.id}
                                 user={user}
-                                handleFunction={() => accessChat(user._id)}
+                                handleFunction={() => accessChat(user.id)}
                             />
                         ))
                     )}

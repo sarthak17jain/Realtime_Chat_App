@@ -76,7 +76,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
             const { data } = await axios.put(
                 `${process.env.REACT_APP_SERVER_BASE_URL}/api/chat/rename`,
                 {
-                    chatId: selectedChat._id,
+                    chatId: selectedChat.id,
                     chatName: groupChatName,
                 },
                 config
@@ -101,7 +101,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
 
     const handleAddUser = async (user1) => {
         setSearchResult([]);
-        if (selectedChat.users.find((u) => u._id === user1._id)) {
+        if (selectedChat.users.find((u) => u.id === user1.id)) {
             toast({
                 title: "User Already in group!",
                 status: "error",
@@ -112,7 +112,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
             return;
         }
 
-        if (selectedChat.groupAdmin._id !== user._id) {
+        if (selectedChat.groupAdmin.id !== user.id) {
             toast({
                 title: "Only admins can add someone!",
                 status: "error",
@@ -133,8 +133,8 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
             const { data } = await axios.put(
                 `${process.env.REACT_APP_SERVER_BASE_URL}/api/chat/groupadd`,
                 {
-                    chatId: selectedChat._id,
-                    userId: user1._id,
+                    chatId: selectedChat.id,
+                    userId: user1.id,
                 },
                 config
             );
@@ -157,7 +157,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
     };
 
     const handleRemove = async (user1) => {
-        if (selectedChat.groupAdmin._id !== user._id && user1._id !== user._id) {
+        if (selectedChat.groupAdmin.id !== user.id && user1.id !== user.id) {
             toast({
                 title: "Only admins can remove someone!",
                 status: "error",
@@ -175,16 +175,18 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
                     Authorization: `Bearer ${user.token}`,
                 },
             };
-            const { data } = await axios.put(
+            const response = await axios.put(
                 `${process.env.REACT_APP_SERVER_BASE_URL}/api/chat/groupremove`,
                 {
-                    chatId: selectedChat._id,
-                    userId: user1._id,
+                    chatId: selectedChat.id,
+                    userId: user1.id,
                 },
                 config
             );
-
-            socket.emit("groupModified", [user1, ...data.users]);
+            const { data } = response;
+            if(data.users){
+                socket.emit("groupModified", [user1, ...data.users]);
+            }
             setFetchAgain(!fetchAgain);//selectedChat is updated by fetchAgain
             fetchMessages();
             setLoading(false);
@@ -229,9 +231,9 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
                     <Box w="100%" display="flex" flexWrap="wrap" pb={3}>
                         {selectedChat.users.map((u) => (
                             <UserBadgeItem
-                                key={u._id}
+                                key={u.id}
                                 user={u}
-                                adminId={selectedChat.groupAdmin._id}
+                                adminId={selectedChat.groupAdmin.id}
                                 handleFunction={() => handleRemove(u)}
                             />
                         ))}
@@ -266,7 +268,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, socket
                     ) : (
                         searchResult?.map((user) => (
                         <UserListItem
-                            key={user._id}
+                            key={user.id}
                             user={user}
                             handleFunction={() => handleAddUser(user)}
                         />

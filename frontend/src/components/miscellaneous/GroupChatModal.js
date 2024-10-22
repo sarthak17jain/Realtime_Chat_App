@@ -32,7 +32,7 @@ const GroupChatModal = ({ children }) => {
 
     const handleGroup = (userToAdd) => {
         setSearchResult([]);
-        if (selectedUsers.includes(userToAdd)) {
+        if (selectedUsers.find((u) => u.id === userToAdd.id)) {
             toast({
                 title: "User already added",
                 status: "warning",
@@ -80,7 +80,7 @@ const GroupChatModal = ({ children }) => {
     };
 
     const handleDelete = (delUser) => {
-        setSelectedUsers(selectedUsers.filter((sel) => sel._id !== delUser._id));
+        setSelectedUsers(selectedUsers.filter((sel) => sel.id !== delUser.id));
     };
 
     const handleSubmit = async () => {
@@ -105,7 +105,7 @@ const GroupChatModal = ({ children }) => {
                     `${process.env.REACT_APP_SERVER_BASE_URL}/api/chat/group`,
                     {
                     name: groupChatName,
-                    users: JSON.stringify(selectedUsers.map((u) => u._id)),
+                    users: JSON.stringify(selectedUsers.map((u) => u.id)),
                     },
                     config
                 );
@@ -171,7 +171,7 @@ const GroupChatModal = ({ children }) => {
                     <Box w="100%" display="flex" flexWrap="wrap">
                         {selectedUsers.map((u) => (
                             <UserBadgeItem
-                                key={u._id}
+                                key={u.id}
                                 user={u}
                                 handleFunction={() => handleDelete(u)}
                             />
@@ -185,7 +185,7 @@ const GroupChatModal = ({ children }) => {
                         ?.slice(0, 4)
                         .map((user) => (
                             <UserListItem
-                                key={user._id}
+                                key={user.id}
                                 user={user}
                                 handleFunction={() => handleGroup(user)}
                             />

@@ -15,7 +15,7 @@ const MyChats = ({ fetchAgain }) => {
     const toast = useToast();
 
     const fetchChats = async () => {
-        // console.log(user._id);
+        // console.log(user.id);
         try {
             const config = {
                 headers: {
@@ -25,7 +25,7 @@ const MyChats = ({ fetchAgain }) => {
 
             const { data } = await axios.get(`${process.env.REACT_APP_SERVER_BASE_URL}/api/chat`, config);
             if(selectedChat){
-                setSelectedChat(data.find((chat)=>chat._id==selectedChat._id));
+                setSelectedChat(data.find((chat)=>chat.id==selectedChat.id));
             }            
             setChats(data);
         } catch (error) {
@@ -95,12 +95,12 @@ const MyChats = ({ fetchAgain }) => {
                             <Box
                                 onClick={() => setSelectedChat(chat)}
                                 cursor="pointer"
-                                bg={selectedChat === chat ? "#38B2AC" : "#E8E8E8"}
-                                color={selectedChat === chat ? "white" : "black"}
+                                bg={selectedChat?.id === chat.id ? "#38B2AC" : "#E8E8E8"}
+                                color={selectedChat?.id === chat.id ? "white" : "black"}
                                 px={3}
                                 py={2}
                                 borderRadius="lg"
-                                key={chat._id}
+                                key={chat.id}
                             >
                                 <Text>
                                     {!chat.isGroupChat

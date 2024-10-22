@@ -37,7 +37,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             setLoading(true);
 
             const { data } = await axios.get(
-                `${process.env.REACT_APP_SERVER_BASE_URL}/api/message/${selectedChat._id}`,
+                `${process.env.REACT_APP_SERVER_BASE_URL}/api/message/${selectedChat.id}`,
                 config
             );
             setMessages(data);
@@ -67,12 +67,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     `${process.env.REACT_APP_SERVER_BASE_URL}/api/message`,
                     {
                         content: newMessage,
-                        chatId: selectedChat,
+                        chatId: selectedChat.id,
                     },
                     config
                 );
 
-                setChats((prevChats) => [data.chat, ...prevChats.filter(chat => chat._id != data.chat._id)]);
+                setChats((prevChats) => [data.chat, ...prevChats.filter(chat => chat.id != data.chat.id)]);
                 setSelectedChat(data.chat);
 
                 setNewMessage("");
@@ -98,7 +98,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }, [notification]);
 
     useEffect(() => {
-        if(!selectedChatRef.current || (selectedChat && selectedChatRef.current._id != selectedChat._id)){//implemented because selectedChat changes on every new message in current chat
+        if(!selectedChatRef.current || (selectedChat && selectedChatRef.current.id != selectedChat.id)){//implemented because selectedChat changes on every new message in current chat
             fetchMessages();
         }
         selectedChatRef.current = selectedChat;
@@ -111,23 +111,26 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     //NOTE since messages and fetchAgain are used only in setState hook therefore i access the latest value 
     //using setState callback so that i have to make less refs
     useEffect(() => {
-        socket = io(`${process.env.REACT_APP_SERVER_BASE_URL}`);
+        socket = io(
+            `${process.env.REACT_APP_SERVER_BASE_URL}`, {
+            transports: [ "websocket" ]
+        });
         socket.emit("setup", user);
         socket.on("connected", () => {
             setSocketConnected(true)
             console.log(socket.id);
         });
         socket.on("messageReceived", (newMessageReceived) => {
-            setChats((prevChats) => [newMessageReceived.chat, ...prevChats.filter(chat => chat._id != newMessageReceived.chat._id)]);
+            setChats((prevChats) => [newMessageReceived.chat, ...prevChats.filter(chat => chat.id != newMessageReceived.chat.id)]);
             
-            if(selectedChatRef.current && newMessageReceived.chat._id == selectedChatRef.current._id){
+            if(selectedChatRef.current && newMessageReceived.chat.id == selectedChatRef.current.id){
                 setSelectedChat(newMessageReceived.chat);
             }
 
             if ((
                 !selectedChatRef.current || // if chat is not selected or doesn't match current chat
-                selectedChatRef.current._id !== newMessageReceived.chat._id
-            ) && newMessageReceived.sender._id != user._id) {
+                selectedChatRef.current.id !== newMessageReceived.chat.id
+            ) && newMessageReceived.sender.id != user.id) {
                 if (!notificationRef.current.includes(newMessageReceived)) {
                     setNotification([newMessageReceived, ...notificationRef.current]);
                 }
